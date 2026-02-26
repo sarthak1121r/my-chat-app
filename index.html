@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Chat App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      * { box-sizing: border-box; }
+      body { 
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+        margin: 0; 
+        padding: 0; 
+        /* The base WhatsApp beige color */
+        background-color: #e5ddd5; 
+        /* The subtle professional chat doodle pattern */
+        background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
+        background-repeat: repeat;
+        background-attachment: fixed;
+        background-blend-mode: overlay; /* Blends the pattern perfectly with the beige */
+        height: 100vh; 
+        display: flex;
+        flex-direction: column;
+      }
+      
+      #header {
+        background-color: #008069; 
+        color: white;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        z-index: 10;
+      }
+      #header img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 15px;
+        background-color: white;
+      }
+      #header h2 { margin: 0; font-size: 16px; font-weight: 600; }
+      #header p { margin: 2px 0 0 0; font-size: 12px; opacity: 0.9; }
+
+      #messages { 
+        list-style-type: none; 
+        padding: 20px; 
+        margin: 0; 
+        flex-grow: 1; 
+        overflow-y: auto; 
+        display: flex; 
+        flex-direction: column; 
+      }
+      
+      #messages li { 
+        padding: 8px 12px; 
+        margin-bottom: 10px; 
+        border-radius: 8px; 
+        max-width: 75%; 
+        word-wrap: break-word; 
+        box-shadow: 0 1px 1px rgba(0,0,0,0.1); 
+        font-size: 15px; 
+      }
+
+      .my-message {
+        align-self: flex-end;
+        background-color: #d9fdd3;
+        border-top-right-radius: 0 !important; 
+      }
+
+      .other-message {
+        align-self: flex-start;
+        background-color: #ffffff;
+        border-top-left-radius: 0 !important;
+      }
+
+      .sender-name {
+        font-size: 12px; 
+        color: #029d00; 
+        display: block; 
+        margin-bottom: 3px; 
+        font-weight: bold;
+      }
+
+      #form { 
+        display: flex; 
+        padding: 10px 15px; 
+        background: #f0f2f5; 
+        align-items: center;
+      }
+      #input { 
+        flex-grow: 1; 
+        padding: 12px 20px; 
+        font-size: 15px; 
+        border: none; 
+        border-radius: 24px; 
+        margin-right: 10px; 
+        outline: none; 
+        background-color: #ffffff;
+      }
+      button { 
+        width: 45px; 
+        height: 45px; 
+        background: #00a884; 
+        color: white; 
+        border: none; 
+        border-radius: 50%; 
+        cursor: pointer; 
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 18px;
+        transition: 0.2s; 
+      }
+      button:hover { background: #008f6f; }
+    </style>
+  </head>
+  <body>
+
+    <div id="header">
+      <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile">
+      <div>
+        <h2 id="user-name-display">Global Chat Room</h2>
+        <p>Online</p>
+      </div>
+    </div>
+
+    <ul id="messages"></ul>
+
+    <form id="form" action="">
+      <input id="input" autocomplete="off" placeholder="Type a message..." />
+      <button>➤</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+      const form = document.getElementById('form');
+      const input = document.getElementById('input');
+      const messages = document.getElementById('messages');
+
+      const myName = prompt("Welcome! What is your name?") || "Anonymous";
+      
+      document.getElementById('user-name-display').textContent = myName;
+
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit('chat message', { user: myName, text: input.value });
+          input.value = '';
+        }
+      });
+
+      socket.on('chat message', function(msg) {
+        const item = document.createElement('li');
+
+        if (msg.user === myName) {
+          item.classList.add('my-message');
+          item.textContent = msg.text; 
+        } else {
+          item.classList.add('other-message');
+          item.innerHTML = `<span class="sender-name">${msg.user}</span>${msg.text}`;
+        }
+
+        messages.appendChild(item);
+        messages.scrollTop = messages.scrollHeight;
+      });
+    </script>
+  </body>
+</html>
