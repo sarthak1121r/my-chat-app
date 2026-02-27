@@ -29,7 +29,9 @@
 
         h1 { 
             background: linear-gradient(135deg, #a855f7, #ec4899);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text; /* FIX FOR VS CODE WARNING */
+            -webkit-text-fill-color: transparent;
             font-size: 36px; margin-bottom: 30px; letter-spacing: -1px;
         }
 
@@ -76,7 +78,7 @@
             text-transform: uppercase; border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* Typing Indicator Styling */
+        /* Professional Typing Indicator */
         #typing-indicator {
             padding: 0 25px 10px;
             font-size: 12px;
@@ -91,8 +93,10 @@
         .dot:nth-child(3) { animation-delay: -0.9s; }
         @keyframes wave { 0%, 60%, 100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-4px); opacity: 1; } }
 
-        #form { padding: 25px; display: flex; gap: 12px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); }
+        #form { padding: 20px; display: flex; gap: 12px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); }
+        #img-btn { background: transparent; border: none; font-size: 22px; cursor: pointer; color: #a855f7; padding: 0 5px; }
         #input { flex-grow: 1; background: rgba(255,255,255,0.05); border-radius: 30px; }
+        .chat-image { max-width: 100%; border-radius: 12px; margin-top: 5px; display: block; }
 
         @keyframes tickPop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .blue-tick { color: #60a5fa; margin-left: 5px; font-size: 10px; animation: tickPop 0.3s ease-out; }
@@ -126,6 +130,8 @@
         </div>
 
         <form id="form" class="glass">
+            <input type="file" id="image-input" accept="image/*" style="display: none;">
+            <button type="button" id="img-btn">📷</button>
             <input id="input" autocomplete="off" placeholder="Type a message...">
             <button style="width: 55px; border-radius: 50%;">➤</button>
         </form>
@@ -197,7 +203,6 @@
             document.getElementById('messages').innerHTML = '';
         });
 
-        // Typing Logic
         const inputField = document.getElementById('input');
         inputField.addEventListener('input', () => {
             socket.emit('typing', myName);
@@ -209,6 +214,24 @@
             indicator.style.display = 'flex';
             clearTimeout(typingTimer);
             typingTimer = setTimeout(() => { indicator.style.display = 'none'; }, 2000);
+        });
+
+        // Image Sending Logic
+        const imgBtn = document.getElementById('img-btn');
+        const imgInput = document.getElementById('image-input');
+        imgBtn.addEventListener('click', () => imgInput.click());
+
+        imgInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    socket.emit('chat message', { user: myName, img: e.target.result, time: time });
+                };
+                reader.readAsDataURL(file);
+                this.value = '';
+            }
         });
 
         document.getElementById('form').addEventListener('submit', (e) => {
@@ -226,11 +249,13 @@
             const isMe = msg.user === myName;
             li.className = isMe ? 'my-message' : 'other-message';
             
+            let content = msg.img ? `<img src="${msg.img}" class="chat-image">` : `<span>${msg.text}</span>`;
+            
             li.innerHTML = `
                 ${getAvatar(msg.user)}
                 <div>
                     <div style="font-size: 10px; opacity: 0.5; margin-bottom: 2px;">${msg.user}</div>
-                    ${msg.text}
+                    ${content}
                     <span class="time">${msg.time}</span>
                     ${isMe ? '<span class="blue-tick">✔✔</span>' : ''}
                 </div>
