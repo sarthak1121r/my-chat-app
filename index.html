@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>My Chat App</title>
+    <title>Neon Chat Room</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
       * { box-sizing: border-box; }
@@ -9,33 +9,75 @@
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
         margin: 0; 
         padding: 0; 
-        background-color: #e5ddd5; 
-        background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
-        background-repeat: repeat;
-        background-attachment: fixed;
-        background-blend-mode: overlay; 
+        background-color: #0f172a; /* Dark sleek background */
+        color: #f8fafc;
         height: 100vh; 
         display: flex;
         flex-direction: column;
       }
+
+      /* --- LOGIN SCREEN STYLES --- */
+      #login-screen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      }
+      .login-box {
+        background: #1e293b;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        text-align: center;
+        width: 90%;
+        max-width: 400px;
+      }
+      .login-box h1 { margin-top: 0; color: #a855f7; }
+      .login-box input {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border: 1px solid #334155;
+        border-radius: 8px;
+        background: #0f172a;
+        color: white;
+        font-size: 16px;
+      }
+      .login-box button {
+        width: 100%;
+        padding: 12px;
+        margin-top: 15px;
+        background: #a855f7;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+      .login-box button:hover { background: #9333ea; }
+      #login-error { color: #ef4444; font-size: 14px; margin-top: 10px; display: none; }
+
+      /* --- CHAT SCREEN STYLES (Hidden at first) --- */
+      #chat-screen {
+        display: none; /* Hidden until logged in */
+        flex-direction: column;
+        height: 100vh;
+      }
       
       #header {
-        background-color: #008069; 
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); 
         color: white;
-        padding: 10px 20px;
+        padding: 15px 20px;
         display: flex;
         align-items: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         z-index: 10;
       }
-      #header img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        margin-right: 15px;
-        background-color: white;
-      }
-      #header h2 { margin: 0; font-size: 16px; font-weight: 600; }
+      #header h2 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: 0.5px; }
       #header p { margin: 2px 0 0 0; font-size: 12px; opacity: 0.9; }
 
       #messages { 
@@ -49,12 +91,12 @@
       }
       
       #messages li { 
-        padding: 6px 10px 8px 12px; 
-        margin-bottom: 5px; 
-        border-radius: 8px; 
+        padding: 8px 14px 10px 14px; 
+        margin-bottom: 10px; 
+        border-radius: 12px; 
         max-width: 75%; 
         word-wrap: break-word; 
-        box-shadow: 0 1px 1px rgba(0,0,0,0.1); 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
         font-size: 15px; 
         position: relative;
         display: flex;
@@ -63,60 +105,59 @@
 
       .my-message {
         align-self: flex-end;
-        background-color: #d9fdd3;
-        border-top-right-radius: 0 !important; 
+        background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
+        color: white;
+        border-bottom-right-radius: 2px !important; 
       }
 
       .other-message {
         align-self: flex-start;
-        background-color: #ffffff;
-        border-top-left-radius: 0 !important;
+        background-color: #334155;
+        color: white;
+        border-bottom-left-radius: 2px !important;
       }
 
       .sender-name {
         font-size: 12px; 
-        color: #029d00; 
+        color: #cbd5e1; 
         display: block; 
-        margin-bottom: 2px; 
+        margin-bottom: 4px; 
         font-weight: bold;
       }
 
-      /* Timestamp styling */
       .msg-footer {
         display: flex;
         justify-content: flex-end;
         align-items: center;
-        margin-top: 2px;
+        margin-top: 4px;
         font-size: 10px;
-        color: #667781;
+        color: rgba(255,255,255,0.7);
       }
 
-      .tick {
-        margin-left: 4px;
-        font-size: 12px;
-        color: #53bdeb; /* WhatsApp blue tick color */
-      }
+      .tick { margin-left: 5px; font-size: 12px; color: #67e8f9; }
 
       #form { 
         display: flex; 
-        padding: 10px 15px; 
-        background: #f0f2f5; 
+        padding: 15px; 
+        background: #1e293b; 
         align-items: center;
       }
       #input { 
         flex-grow: 1; 
-        padding: 12px 20px; 
+        padding: 14px 20px; 
         font-size: 15px; 
         border: none; 
-        border-radius: 24px; 
-        margin-right: 10px; 
+        border-radius: 30px; 
+        margin-right: 15px; 
         outline: none; 
-        background-color: #ffffff;
+        background-color: #334155;
+        color: white;
       }
-      button { 
-        width: 45px; 
-        height: 45px; 
-        background: #00a884; 
+      #input::placeholder { color: #94a3b8; }
+      .send-btn { 
+        width: 50px; 
+        height: 50px; 
+        background: #a855f7; 
         color: white; 
         border: none; 
         border-radius: 50%; 
@@ -124,68 +165,92 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        font-size: 18px;
+        font-size: 20px;
         transition: 0.2s; 
       }
-      button:hover { background: #008f6f; }
+      .send-btn:hover { background: #9333ea; transform: scale(1.05); }
     </style>
   </head>
   <body>
 
-    <div id="header">
-      <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile">
-      <div style="flex-grow: 1;">
-        <h2 id="user-name-display">Chat App</h2>
-        <p>Online</p>
+    <div id="login-screen">
+      <div class="login-box">
+        <h1>Neon Chat</h1>
+        <p style="color: #94a3b8; margin-bottom: 20px;">Please login to continue</p>
+        <input id="username" type="text" placeholder="Enter your Name" autocomplete="off">
+        <input id="password" type="password" placeholder="Room Password (1234)" autocomplete="off">
+        <button id="join-btn">Join Chat</button>
+        <p id="login-error">Incorrect password or missing name!</p>
       </div>
-      <button id="clear-btn" style="width: auto; height: 35px; border-radius: 10px; padding: 0 15px; font-size: 14px; background: #dc3545; color: white;">Clear</button>
     </div>
 
-    <ul id="messages"></ul>
+    <div id="chat-screen">
+      <div id="header">
+        <div style="flex-grow: 1;">
+          <h2 id="user-name-display">Neon Chat Room</h2>
+          <p>🟢 Secure Connection</p>
+        </div>
+        <button id="clear-btn" style="width: auto; height: 35px; border-radius: 8px; padding: 0 15px; font-size: 14px; background: #ef4444; color: white; border: none; cursor: pointer;">Clear</button>
+      </div>
 
-    <div id="typing-indicator" style="padding: 0 20px 5px; font-style: italic; color: #888; font-size: 13px; height: 25px;"></div>
+      <ul id="messages"></ul>
 
-    <form id="form" action="">
-      <input id="input" autocomplete="off" placeholder="Type a message..." />
-      <button>➤</button>
-    </form>
+      <div id="typing-indicator" style="padding: 0 20px 5px; font-style: italic; color: #a855f7; font-size: 13px; height: 25px;"></div>
+
+      <form id="form" action="">
+        <input id="input" autocomplete="off" placeholder="Message the room..." />
+        <button class="send-btn">➤</button>
+      </form>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
       const socket = io();
+      let myName = "";
+
+      // Login Logic
+      document.getElementById('join-btn').addEventListener('click', function() {
+        const nameInput = document.getElementById('username').value.trim();
+        const passInput = document.getElementById('password').value;
+
+        // Check if name is entered and password is "1234"
+        if (nameInput.length > 0 && passInput === "1234") {
+          myName = nameInput;
+          document.getElementById('user-name-display').textContent = "Logged in as: " + myName;
+          
+          // Hide login screen, show chat screen
+          document.getElementById('login-screen').style.display = "none";
+          document.getElementById('chat-screen').style.display = "flex";
+        } else {
+          // Show error message
+          document.getElementById('login-error').style.display = "block";
+        }
+      });
+
+      // Chat Logic (Only works after login)
       const form = document.getElementById('form');
       const input = document.getElementById('input');
       const messages = document.getElementById('messages');
 
-      const myName = prompt("Welcome! What is your name?") || "Anonymous";
-      document.getElementById('user-name-display').textContent = "Logged in as: " + myName;
-
       form.addEventListener('submit', function(e) {
         e.preventDefault();
-        if (input.value) {
-          // Send time along with the message
+        if (input.value && myName !== "") {
           const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           socket.emit('chat message', { user: myName, text: input.value, time: time });
           input.value = '';
-          
-          // Clear typing indicator immediately when message is sent
           socket.emit('typing', ''); 
         }
       });
 
       socket.on('chat message', function(msg) {
         const item = document.createElement('li');
-        
-        // Use the time from the message object, or get current time if missing
         const timeStamp = msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         if (msg.user === myName) {
           item.classList.add('my-message');
           item.innerHTML = `
             <span>${msg.text}</span>
-            <div class="msg-footer">
-              ${timeStamp} <span class="tick">✔✔</span>
-            </div>
+            <div class="msg-footer">${timeStamp} <span class="tick">✔✔</span></div>
           `; 
         } else {
           item.classList.add('other-message');
@@ -195,41 +260,30 @@
             <div class="msg-footer">${timeStamp}</div>
           `;
         }
-
         messages.appendChild(item);
         messages.scrollTop = messages.scrollHeight;
       });
 
-      // Clear Chat Button Logic
       document.getElementById('clear-btn').addEventListener('click', function() {
         messages.innerHTML = ''; 
       });
 
-      // --- NEW TYPING INDICATOR LOGIC ---
+      // Typing Indicator Logic
       const typingIndicator = document.getElementById('typing-indicator');
       let typingTimer;
 
-      // When I type, tell the server
       input.addEventListener('input', function() {
-        if (input.value.length > 0) {
-          socket.emit('typing', myName);
-        } else {
-          socket.emit('typing', ''); // Clear if input is empty
-        }
+        if (input.value.length > 0) socket.emit('typing', myName);
+        else socket.emit('typing', ''); 
       });
 
-      // When the server says someone else is typing, show it
       socket.on('typing', function(name) {
         if (name) {
           typingIndicator.textContent = `${name} is typing...`;
-          
-          // Clear the message after 2 seconds of silence
           clearTimeout(typingTimer);
-          typingTimer = setTimeout(function() {
-            typingIndicator.textContent = '';
-          }, 2000);
+          typingTimer = setTimeout(() => typingIndicator.textContent = '', 2000);
         } else {
-          typingIndicator.textContent = ''; // Hide if name is empty
+          typingIndicator.textContent = ''; 
         }
       });
     </script>
