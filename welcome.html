@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Welcome to Neon Glass</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #050505; color: white; overflow: hidden;
+        }
+
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .welcome-container {
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; height: 100%; text-align: center;
+            padding: 20px;
+        }
+
+        .hero-section {
+            animation: fadeInDown 1s ease-out;
+            margin-bottom: 40px;
+        }
+
+        h1 { 
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: clamp(48px, 10vw, 72px); 
+            margin: 0; letter-spacing: -2px;
+        }
+
+        p { color: rgba(255,255,255,0.6); font-size: 18px; margin-top: 10px; }
+
+        .auth-card {
+            width: 100%; max-width: 400px; padding: 40px; border-radius: 32px;
+            animation: fadeInUp 1s ease-out 0.3s backwards;
+        }
+
+        input {
+            width: 100%; padding: 16px; margin: 10px 0; border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.4);
+            color: white; font-size: 16px; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: #a855f7; background: rgba(0,0,0,0.6); }
+
+        button {
+            width: 100%; padding: 16px; border-radius: 14px; border: none;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: white; font-weight: 600; cursor: pointer; transition: 0.3s;
+            margin-top: 15px; font-size: 16px;
+        }
+        button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(168, 85, 247, 0.4); }
+
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="welcome-container">
+        <div class="hero-section">
+            <h1>Neon Glass</h1>
+            <p>Experience the future of real-time connection.</p>
+        </div>
+
+        <div class="auth-card glass">
+            <input id="username" type="text" placeholder="Choose a username">
+            <input id="password" type="password" placeholder="Password">
+            <button id="login-btn">Get Started</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // --- BACKGROUND PARTICLES ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function initParticles() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<80; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 0.5, speedX: Math.random() * 0.4 - 0.2,
+                    speedY: Math.random() * 0.4 - 0.2, color: Math.random() > 0.5 ? '#a855f7' : '#ec4899'
+                });
+            }
+        }
+        function animate() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.speedX; p.y += p.speedY;
+                if(p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+                ctx.fillStyle = p.color; ctx.globalAlpha = 0.2;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        }
+        window.addEventListener('resize', initParticles);
+        initParticles(); animate();
+
+        // --- LOGIN LOGIC ---
+        const socket = io();
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const name = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value;
+
+            if (name && pass) {
+                socket.emit('login', { username: name, password: pass }, (res) => {
+                    if (res.success) {
+                        // SAVE USER TO SESSION STORAGE (so other pages know who you are)
+                        sessionStorage.setItem('username', name);
+                        // REDIRECT TO DASHBOARD
+                        window.location.href = '/dashboard';
+                    } else {
+                        alert(res.message);
+                    }
+                });
+            } else {
+                alert("Please fill in all fields.");
+            }
+        });
+    </script>
+</body>
+</html>

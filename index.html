@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Neon Glass v2</title>
+    <title>Neon Glass Chat</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
@@ -12,9 +12,7 @@
             background: #050505; color: white; overflow: hidden;
         }
 
-        #bg-canvas {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-        }
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
 
         .glass {
             background: rgba(255, 255, 255, 0.03);
@@ -24,13 +22,14 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
         }
 
+        /* login-screen is now hidden initially because server.js defaults to welcome.html */
         #login-screen { display: flex; justify-content: center; align-items: center; height: 100%; }
         .login-box { width: 90%; max-width: 380px; padding: 40px; border-radius: 28px; text-align: center; }
 
         h1 { 
             background: linear-gradient(135deg, #a855f7, #ec4899);
             -webkit-background-clip: text;
-            background-clip: text; /* FIX FOR VS CODE WARNING */
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             font-size: 36px; margin-bottom: 30px; letter-spacing: -1px;
         }
@@ -78,15 +77,8 @@
             text-transform: uppercase; border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* Professional Typing Indicator */
         #typing-indicator {
-            padding: 0 25px 10px;
-            font-size: 12px;
-            color: #a855f7;
-            height: 25px;
-            display: none;
-            align-items: center;
-            gap: 5px;
+            padding: 0 25px 10px; font-size: 12px; color: #a855f7; height: 25px; display: none; align-items: center; gap: 5px;
         }
         .dot { width: 4px; height: 4px; background: #a855f7; border-radius: 50%; animation: wave 1.3s infinite; }
         .dot:nth-child(2) { animation-delay: -1.1s; }
@@ -110,7 +102,7 @@
 
     <div id="login-screen">
         <div class="login-box glass">
-            <h1>Neon Glass</h1>
+            <h1>Neon Chat</h1>
             <input id="username" type="text" placeholder="Username">
             <input id="password" type="password" placeholder="Password">
             <button id="join-btn">Connect</button>
@@ -119,7 +111,7 @@
 
     <div id="chat-screen">
         <div id="header" class="glass">
-            <span id="user-display">Chat</span>
+            <span id="user-display">Chat Room</span>
             <button id="clear-btn" style="width: auto; padding: 8px 18px; font-size: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.5);">Clear</button>
         </div>
         <ul id="messages"></ul>
@@ -139,34 +131,28 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // --- BACKGROUND PARTICLES ---
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
-
         function initParticles() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
             particles = [];
             for(let i=0; i<80; i++) {
                 particles.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    size: Math.random() * 2 + 0.5,
-                    speedX: Math.random() * 0.5 - 0.25,
-                    speedY: Math.random() * 0.5 - 0.25,
-                    color: Math.random() > 0.5 ? '#a855f7' : '#ec4899'
+                    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 0.5, speedX: Math.random() * 0.5 - 0.25,
+                    speedY: Math.random() * 0.5 - 0.25, color: Math.random() > 0.5 ? '#a855f7' : '#ec4899'
                 });
             }
         }
-
         function animate() {
             ctx.clearRect(0,0,canvas.width, canvas.height);
             particles.forEach(p => {
                 p.x += p.speedX; p.y += p.speedY;
                 if(p.x < 0 || p.x > canvas.width) p.speedX *= -1;
                 if(p.y < 0 || p.y > canvas.height) p.speedY *= -1;
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = p.color; ctx.globalAlpha = 0.3;
                 ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
             });
             requestAnimationFrame(animate);
@@ -174,7 +160,8 @@
         window.addEventListener('resize', initParticles);
         initParticles(); animate();
 
-        const socket = io();
+        // --- CORE CHAT LOGIC ---
+        let socket; // Initialize variable but don't assign yet
         let myName = "";
         let typingTimer;
 
@@ -187,43 +174,63 @@
         document.getElementById('join-btn').addEventListener('click', () => {
             const name = document.getElementById('username').value.trim();
             const pass = document.getElementById('password').value;
+            
             if(name && pass) {
+                // STEP 2: ONLY CONNECT WHEN BUTTON IS CLICKED
+                socket = io(); 
+                
                 socket.emit('login', { username: name, password: pass }, (res) => {
                     if(res.success) {
                         myName = name;
+                        setupSocketListeners(); // Activate listeners only after login
                         document.getElementById('login-screen').style.display = 'none';
                         document.getElementById('chat-screen').style.display = 'flex';
                         document.getElementById('user-display').innerHTML = `<b>${name}</b>`;
-                    } else { alert(res.message); }
+                    } else { 
+                        alert(res.message); 
+                        socket.disconnect(); // Kill connection if login fails
+                    }
                 });
             }
         });
 
-        document.getElementById('clear-btn').addEventListener('click', () => {
-            document.getElementById('messages').innerHTML = '';
-        });
+        function setupSocketListeners() {
+            socket.on('typing', (name) => {
+                const indicator = document.getElementById('typing-indicator');
+                document.getElementById('typing-text').textContent = `${name} is typing`;
+                indicator.style.display = 'flex';
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => { indicator.style.display = 'none'; }, 2000);
+            });
 
+            socket.on('chat message', (msg) => {
+                document.getElementById('typing-indicator').style.display = 'none';
+                const li = document.createElement('li');
+                const isMe = msg.user === myName;
+                li.className = isMe ? 'my-message' : 'other-message';
+                let content = msg.img ? `<img src="${msg.img}" class="chat-image">` : `<span>${msg.text}</span>`;
+                li.innerHTML = `
+                    ${getAvatar(msg.user)}
+                    <div>
+                        <div style="font-size: 10px; opacity: 0.5; margin-bottom: 2px;">${msg.user}</div>
+                        ${content}
+                        <span class="time">${msg.time}</span>
+                        ${isMe ? '<span class="blue-tick">✔✔</span>' : ''}
+                    </div>
+                `;
+                document.getElementById('messages').appendChild(li);
+                document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+            });
+        }
+
+        // Inputs
         const inputField = document.getElementById('input');
-        inputField.addEventListener('input', () => {
-            socket.emit('typing', myName);
-        });
+        inputField.addEventListener('input', () => { if(socket) socket.emit('typing', myName); });
 
-        socket.on('typing', (name) => {
-            const indicator = document.getElementById('typing-indicator');
-            document.getElementById('typing-text').textContent = `${name} is typing`;
-            indicator.style.display = 'flex';
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => { indicator.style.display = 'none'; }, 2000);
-        });
-
-        // Image Sending Logic
-        const imgBtn = document.getElementById('img-btn');
-        const imgInput = document.getElementById('image-input');
-        imgBtn.addEventListener('click', () => imgInput.click());
-
-        imgInput.addEventListener('change', function() {
+        document.getElementById('img-btn').addEventListener('click', () => document.getElementById('image-input').click());
+        document.getElementById('image-input').addEventListener('change', function() {
             const file = this.files[0];
-            if (file) {
+            if (file && socket) {
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -236,33 +243,14 @@
 
         document.getElementById('form').addEventListener('submit', (e) => {
             e.preventDefault();
-            if(inputField.value) {
+            if(inputField.value && socket) {
                 const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 socket.emit('chat message', { user: myName, text: inputField.value, time: time });
                 inputField.value = '';
             }
         });
 
-        socket.on('chat message', (msg) => {
-            document.getElementById('typing-indicator').style.display = 'none';
-            const li = document.createElement('li');
-            const isMe = msg.user === myName;
-            li.className = isMe ? 'my-message' : 'other-message';
-            
-            let content = msg.img ? `<img src="${msg.img}" class="chat-image">` : `<span>${msg.text}</span>`;
-            
-            li.innerHTML = `
-                ${getAvatar(msg.user)}
-                <div>
-                    <div style="font-size: 10px; opacity: 0.5; margin-bottom: 2px;">${msg.user}</div>
-                    ${content}
-                    <span class="time">${msg.time}</span>
-                    ${isMe ? '<span class="blue-tick">✔✔</span>' : ''}
-                </div>
-            `;
-            document.getElementById('messages').appendChild(li);
-            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-        });
+        document.getElementById('clear-btn').addEventListener('click', () => { document.getElementById('messages').innerHTML = ''; });
     </script>
 </body>
 </html>
