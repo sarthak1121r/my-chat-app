@@ -17,7 +17,6 @@
         flex-direction: column;
       }
 
-      /* --- ANIMATIONS --- */
       @keyframes popIn {
         0% { opacity: 0; transform: translateY(20px) scale(0.95); }
         100% { opacity: 1; transform: translateY(0) scale(1); }
@@ -28,7 +27,6 @@
         to { opacity: 1; }
       }
 
-      /* --- LOGIN SCREEN STYLES --- */
       #login-screen {
         display: flex;
         flex-direction: column;
@@ -77,7 +75,6 @@
       .login-box button:hover { background: #9333ea; transform: translateY(-2px); }
       #login-error { color: #ef4444; font-size: 14px; margin-top: 10px; display: none; }
 
-      /* --- CHAT SCREEN STYLES --- */
       #chat-screen {
         display: none; 
         flex-direction: column;
@@ -119,106 +116,28 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        /* Trigger the bounce animation on every new message */
         animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
 
-      .my-message {
-        align-self: flex-end;
-        background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%);
-        color: white;
-        border-bottom-right-radius: 2px !important; 
-      }
-
-      .other-message {
-        align-self: flex-start;
-        background-color: #334155;
-        color: white;
-        border-bottom-left-radius: 2px !important;
-      }
-
-      .sender-name {
-        font-size: 12px; 
-        color: #cbd5e1; 
-        display: block; 
-        margin-bottom: 4px; 
-        font-weight: bold;
-      }
-
-      .chat-image {
-        max-width: 100%;
-        border-radius: 8px;
-        margin-bottom: 5px;
-        cursor: pointer;
-        transition: transform 0.2s;
-      }
+      .my-message { align-self: flex-end; background: linear-gradient(135deg, #a855f7 0%, #7e22ce 100%); color: white; border-bottom-right-radius: 2px !important; }
+      .other-message { align-self: flex-start; background-color: #334155; color: white; border-bottom-left-radius: 2px !important; }
+      .sender-name { font-size: 12px; color: #cbd5e1; display: block; margin-bottom: 4px; font-weight: bold; }
+      .chat-image { max-width: 100%; border-radius: 8px; margin-bottom: 5px; cursor: pointer; transition: transform 0.2s; }
       .chat-image:active { transform: scale(0.98); }
-
-      .msg-footer {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        margin-top: 4px;
-        font-size: 10px;
-        color: rgba(255,255,255,0.7);
-      }
-
+      .msg-footer { display: flex; justify-content: flex-end; align-items: center; margin-top: 4px; font-size: 10px; color: rgba(255,255,255,0.7); }
       .tick { margin-left: 5px; font-size: 12px; color: #67e8f9; }
 
-      #form { 
-        display: flex; 
-        padding: 10px 15px; 
-        background: #1e293b; 
-        align-items: center;
-        padding-bottom: env(safe-area-inset-bottom, 15px); 
-      }
-
-      #img-btn {
-        background: transparent;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-        margin-right: 10px;
-        color: #a855f7;
-        padding: 0 5px;
-        transition: transform 0.2s;
-      }
+      #form { display: flex; padding: 10px 15px; background: #1e293b; align-items: center; padding-bottom: env(safe-area-inset-bottom, 15px); }
+      #img-btn { background: transparent; border: none; font-size: 24px; cursor: pointer; margin-right: 10px; color: #a855f7; padding: 0 5px; transition: transform 0.2s; }
       #img-btn:active { transform: scale(0.8); }
-
-      #input { 
-        flex-grow: 1; 
-        padding: 12px 20px; 
-        font-size: 15px; 
-        border: none; 
-        border-radius: 30px; 
-        margin-right: 10px; 
-        outline: none; 
-        background-color: #334155;
-        color: white;
-        transition: background-color 0.3s;
-      }
+      #input { flex-grow: 1; padding: 12px 20px; font-size: 15px; border: none; border-radius: 30px; margin-right: 10px; outline: none; background-color: #334155; color: white; transition: background-color 0.3s; }
       #input:focus { background-color: #475569; }
       #input::placeholder { color: #94a3b8; }
-      
-      .send-btn { 
-        width: 45px; 
-        height: 45px; 
-        background: #a855f7; 
-        color: white; 
-        border: none; 
-        border-radius: 50%; 
-        cursor: pointer; 
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 18px;
-        transition: 0.2s; 
-      }
+      .send-btn { width: 45px; height: 45px; background: #a855f7; color: white; border: none; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 18px; transition: 0.2s; }
       .send-btn:active { background: #9333ea; transform: scale(0.9); }
     </style>
   </head>
   <body>
-
     <audio id="notify-sound" src="https://actions.google.com/sounds/v1/water_exploration/water_drop.ogg" preload="auto"></audio>
 
     <div id="login-screen">
@@ -226,9 +145,9 @@
         <h1>Neon Chat</h1>
         <p style="color: #94a3b8; margin-bottom: 20px;">Please login to continue</p>
         <input id="username" type="text" placeholder="Enter your Name" autocomplete="off">
-        <input id="password" type="password" placeholder="Room Password (1234)" autocomplete="off">
+        <input id="password" type="password" placeholder="Create or Enter Password" autocomplete="off">
         <button id="join-btn">Join Chat</button>
-        <p id="login-error">Incorrect password or missing name!</p>
+        <p id="login-error">Incorrect password!</p>
       </div>
     </div>
 
@@ -242,7 +161,6 @@
       </div>
 
       <ul id="messages"></ul>
-
       <div id="typing-indicator" style="padding: 0 20px 5px; font-style: italic; color: #a855f7; font-size: 13px; height: 25px;"></div>
 
       <form id="form" action="">
@@ -259,27 +177,38 @@
       let myName = "";
       const notifySound = document.getElementById('notify-sound');
 
-      // Login Logic with Fade Animation
+      // --- DATABASE LOGIN LOGIC ---
       document.getElementById('join-btn').addEventListener('click', function() {
         const nameInput = document.getElementById('username').value.trim();
         const passInput = document.getElementById('password').value;
+        const errorText = document.getElementById('login-error');
 
-        if (nameInput.length > 0 && passInput === "1234") {
-          myName = nameInput;
-          document.getElementById('user-name-display').textContent = "Logged in as: " + myName;
+        if (nameInput.length > 0 && passInput.length > 0) {
           
-          // Fade out login, fade in chat
-          const loginScreen = document.getElementById('login-screen');
-          loginScreen.style.opacity = '0';
-          setTimeout(() => {
-            loginScreen.style.display = "none";
-            const chatScreen = document.getElementById('chat-screen');
-            chatScreen.style.display = "flex";
-            chatScreen.style.animation = "fadeIn 0.5s ease-in forwards";
-          }, 500);
+          // Ask the server to verify our credentials!
+          socket.emit('login', { username: nameInput, password: passInput }, function(response) {
+            if (response.success) {
+              myName = nameInput;
+              document.getElementById('user-name-display').textContent = "Logged in as: " + myName;
+              
+              const loginScreen = document.getElementById('login-screen');
+              loginScreen.style.opacity = '0';
+              setTimeout(() => {
+                loginScreen.style.display = "none";
+                const chatScreen = document.getElementById('chat-screen');
+                chatScreen.style.display = "flex";
+                chatScreen.style.animation = "fadeIn 0.5s ease-in forwards";
+              }, 500);
+            } else {
+              // Show the error sent from the database (e.g., Wrong password)
+              errorText.textContent = response.message;
+              errorText.style.display = "block";
+            }
+          });
 
         } else {
-          document.getElementById('login-error').style.display = "block";
+          errorText.textContent = "Please enter both name and password!";
+          errorText.style.display = "block";
         }
       });
 
@@ -315,7 +244,6 @@
         }
       });
 
-      // Receiving Messages
       socket.on('chat message', function(msg) {
         const item = document.createElement('li');
         const timeStamp = msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -326,20 +254,11 @@
 
         if (msg.user === myName) {
           item.classList.add('my-message');
-          item.innerHTML = `
-            ${contentHtml}
-            <div class="msg-footer">${timeStamp} <span class="tick">✔✔</span></div>
-          `; 
+          item.innerHTML = `${contentHtml}<div class="msg-footer">${timeStamp} <span class="tick">✔✔</span></div>`; 
         } else {
           item.classList.add('other-message');
-          item.innerHTML = `
-            <span class="sender-name">${msg.user}</span>
-            ${contentHtml}
-            <div class="msg-footer">${timeStamp}</div>
-          `;
-          
-          // PLAY SOUND FOR INCOMING MESSAGES
-          notifySound.play().catch(e => console.log("Sound blocked by browser until user interacts"));
+          item.innerHTML = `<span class="sender-name">${msg.user}</span>${contentHtml}<div class="msg-footer">${timeStamp}</div>`;
+          notifySound.play().catch(e => console.log("Sound blocked"));
         }
         
         messages.appendChild(item);
@@ -348,7 +267,6 @@
 
       document.getElementById('clear-btn').addEventListener('click', () => messages.innerHTML = '');
 
-      // Typing Indicator
       const typingIndicator = document.getElementById('typing-indicator');
       let typingTimer;
 
