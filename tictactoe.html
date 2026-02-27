@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Neon Tic-Tac-Toe</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #050505; color: white; overflow: hidden; }
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; }
+        
+        h2 { background: linear-gradient(135deg, #a855f7, #ec4899); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 32px; margin-bottom: 20px; }
+
+        .board {
+            display: grid; grid-template-columns: repeat(3, 100px); grid-template-rows: repeat(3, 100px);
+            gap: 10px; margin-bottom: 20px;
+        }
+
+        .cell {
+            width: 100px; height: 100px; border-radius: 15px; display: flex;
+            align-items: center; justify-content: center; font-size: 40px;
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        .cell:hover { background: rgba(255, 255, 255, 0.05); }
+        .cell.x { color: #ec4899; text-shadow: 0 0 10px #ec4899; }
+        .cell.o { color: #a855f7; text-shadow: 0 0 10px #a855f7; }
+
+        .status { font-size: 18px; margin-bottom: 20px; height: 25px; }
+        .back-btn { background: transparent; border: 1px solid #a855f7; color: #a855f7; padding: 10px 20px; border-radius: 12px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+    <div class="container">
+        <h2>Tic-Tac-Toe</h2>
+        <div id="status" class="status">Player X's Turn</div>
+        <div class="board" id="board">
+            <div class="cell glass" data-index="0"></div>
+            <div class="cell glass" data-index="1"></div>
+            <div class="cell glass" data-index="2"></div>
+            <div class="cell glass" data-index="3"></div>
+            <div class="cell glass" data-index="4"></div>
+            <div class="cell glass" data-index="5"></div>
+            <div class="cell glass" data-index="6"></div>
+            <div class="cell glass" data-index="7"></div>
+            <div class="cell glass" data-index="8"></div>
+        </div>
+        <button class="back-btn" onclick="window.location.href='/dashboard'">← Dashboard</button>
+    </div>
+
+    <script>
+        const boardElement = document.getElementById('board');
+        const statusElement = document.getElementById('status');
+        let currentPlayer = 'X';
+        let gameState = ["", "", "", "", "", "", "", "", ""];
+        let gameActive = true;
+
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]
+        ];
+
+        function handleCellClick(e) {
+            const clickedCell = e.target;
+            const clickedIndex = parseInt(clickedCell.getAttribute('data-index'));
+
+            if (gameState[clickedIndex] !== "" || !gameActive) return;
+
+            gameState[clickedIndex] = currentPlayer;
+            clickedCell.innerText = currentPlayer;
+            clickedCell.classList.add(currentPlayer.toLowerCase());
+
+            checkResult();
+        }
+
+        function checkResult() {
+            let roundWon = false;
+            for (let i = 0; i <= 7; i++) {
+                const winCondition = winningConditions[i];
+                let a = gameState[winCondition[0]];
+                let b = gameState[winCondition[1]];
+                let c = gameState[winCondition[2]];
+                if (a === '' || b === '' || c === '') continue;
+                if (a === b && b === c) { roundWon = true; break; }
+            }
+
+            if (roundWon) {
+                statusElement.innerText = `Player ${currentPlayer} Wins!`;
+                gameActive = false;
+                return;
+            }
+
+            if (!gameState.includes("")) {
+                statusElement.innerText = "It's a Draw!";
+                gameActive = false;
+                return;
+            }
+
+            currentPlayer = currentPlayer === "X" ? "O" : "X";
+            statusElement.innerText = `Player ${currentPlayer}'s Turn`;
+        }
+
+        boardElement.addEventListener('click', handleCellClick);
+        // Background particles logic... (you can copy this from your other pages)
+    </script>
+</body>
+</html>

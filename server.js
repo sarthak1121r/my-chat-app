@@ -34,9 +34,13 @@ app.get('/chat', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-// --- NEW PROFILE ROUTE ---
 app.get('/profile', (req, res) => {
   res.sendFile(__dirname + '/profile.html');
+});
+
+// --- NEW GAME ROUTE ---
+app.get('/games/tictactoe', (req, res) => {
+  res.sendFile(__dirname + '/tictactoe.html');
 });
 
 // Socket logic
