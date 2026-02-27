@@ -21,6 +21,12 @@ io.on('connection', (socket) => {
     io.emit('chat message', msg);
   });
 
+  // Listen for the 'typing' signal from a user
+  socket.on('typing', (name) => {
+    // Broadcast the signal to EVERYONE ELSE except the sender
+    socket.broadcast.emit('typing', name);
+  });
+
   // When a user closes the tab
   socket.on('disconnect', () => {
     console.log('A user disconnected');

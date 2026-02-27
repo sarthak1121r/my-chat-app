@@ -143,6 +143,8 @@
 
     <ul id="messages"></ul>
 
+    <div id="typing-indicator" style="padding: 0 20px 5px; font-style: italic; color: #888; font-size: 13px; height: 25px;"></div>
+
     <form id="form" action="">
       <input id="input" autocomplete="off" placeholder="Type a message..." />
       <button>➤</button>
@@ -165,6 +167,9 @@
           const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           socket.emit('chat message', { user: myName, text: input.value, time: time });
           input.value = '';
+          
+          // Clear typing indicator immediately when message is sent
+          socket.emit('typing', ''); 
         }
       });
 
@@ -198,6 +203,34 @@
       // Clear Chat Button Logic
       document.getElementById('clear-btn').addEventListener('click', function() {
         messages.innerHTML = ''; 
+      });
+
+      // --- NEW TYPING INDICATOR LOGIC ---
+      const typingIndicator = document.getElementById('typing-indicator');
+      let typingTimer;
+
+      // When I type, tell the server
+      input.addEventListener('input', function() {
+        if (input.value.length > 0) {
+          socket.emit('typing', myName);
+        } else {
+          socket.emit('typing', ''); // Clear if input is empty
+        }
+      });
+
+      // When the server says someone else is typing, show it
+      socket.on('typing', function(name) {
+        if (name) {
+          typingIndicator.textContent = `${name} is typing...`;
+          
+          // Clear the message after 2 seconds of silence
+          clearTimeout(typingTimer);
+          typingTimer = setTimeout(function() {
+            typingIndicator.textContent = '';
+          }, 2000);
+        } else {
+          typingIndicator.textContent = ''; // Hide if name is empty
+        }
       });
     </script>
   </body>
