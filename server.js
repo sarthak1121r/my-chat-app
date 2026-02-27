@@ -93,6 +93,11 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('ice-candidate', data);
   });
 
+  // 4. NEW: When someone hangs up, tell the other person to close their screen
+  socket.on('end-call', () => {
+    socket.broadcast.emit('end-call');
+  });
+
   // ==========================================
 
   socket.on('disconnect', () => {

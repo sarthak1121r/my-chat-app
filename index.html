@@ -169,7 +169,7 @@
         let localStream;
         let peerConnection;
         
-        // Google's free public STUN servers to help browsers find each other
+        // Google's free public STUN servers
         const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
         const localVideo = document.getElementById('local-video');
@@ -182,25 +182,17 @@
             callStatus.innerText = 'Requesting Camera/Mic...';
 
             try {
-                // 1. Get user's camera and mic
                 localStream = await navigator.mediaDevices.getUserMedia({ video: isVideoCall, audio: true });
                 localVideo.srcObject = localStream;
                 
-                // 2. Create the connection engine
                 peerConnection = new RTCPeerConnection(servers);
-
-                // 3. Add our video/audio to the connection
                 localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-                // 4. When we receive their video, put it on the big screen
                 peerConnection.ontrack = (event) => { remoteVideo.srcObject = event.streams[0]; };
 
-                // 5. Send networking coordinates to the other person
                 peerConnection.onicecandidate = (event) => {
                     if (event.candidate) socket.emit('ice-candidate', event.candidate);
                 };
 
-                // 6. Ring the other person!
                 callStatus.innerText = 'Ringing...';
                 const offer = await peerConnection.createOffer();
                 await peerConnection.setLocalDescription(offer);
@@ -208,13 +200,12 @@
 
             } catch (error) {
                 alert("Could not access camera/microphone.");
-                endCall();
+                endCall(true); // Treat as if we hung up
             }
         }
 
         // --- INCOMING CALL LOGIC ---
         socket.on('call-offer', async (data) => {
-            // Ask if they want to pick up
             const accept = confirm(`Incoming ${data.isVideo ? 'Video' : 'Voice'} Call from ${data.caller}. Accept?`);
             if (!accept) return;
 
@@ -229,34 +220,46 @@
             peerConnection.ontrack = (event) => { remoteVideo.srcObject = event.streams[0]; };
             peerConnection.onicecandidate = (event) => { if (event.candidate) socket.emit('ice-candidate', event.candidate); };
 
-            // Answer the ringing phone
             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
             socket.emit('call-answer', { answer: answer });
         });
 
-        // When the other person picks up
         socket.on('call-answer', async (data) => {
             callStatus.innerText = 'Connected!';
             await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
         });
 
-        // Exchange networking coordinates
         socket.on('ice-candidate', async (candidate) => {
             if (peerConnection) await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
         });
 
-        // --- END CALL LOGIC ---
-        function endCall() {
+        // --- END CALL LOGIC (NOW SYNCHRONIZED) ---
+        function endCall(isSender = true) {
             if (peerConnection) { peerConnection.close(); peerConnection = null; }
             if (localStream) { localStream.getTracks().forEach(track => track.stop()); localStream = null; }
             localVideo.srcObject = null;
             remoteVideo.srcObject = null;
             callScreen.style.display = 'none';
+
+            // Send signal to the other person if WE clicked hang up
+            if (isSender) {
+                socket.emit('end-call');
+            }
         }
 
-        document.getElementById('end-call-btn').addEventListener('click', endCall);
+        // When YOU click the red button
+        document.getElementById('end-call-btn').addEventListener('click', () => endCall(true));
+
+        // When the OTHER PERSON hangs up
+        socket.on('end-call', () => {
+            callStatus.innerText = 'Call Ended';
+            setTimeout(() => {
+                endCall(false); 
+            }, 1000);
+        });
+
         document.getElementById('video-call-btn').addEventListener('click', () => startCall(true));
         document.getElementById('voice-call-btn').addEventListener('click', () => startCall(false));
 
