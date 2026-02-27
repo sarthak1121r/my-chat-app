@@ -22,22 +22,24 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 // --- 3. MULTI-PAGE ROUTES ---
-// Default page is now 'welcome.html'
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/welcome.html');
 });
 
-// The Central Hub
 app.get('/dashboard', (req, res) => {
   res.sendFile(__dirname + '/dashboard.html');
 });
 
-// The Chat Room
 app.get('/chat', (req, res) => {
   res.sendFile(__dirname + '/index.html');
 });
 
-// Socket logic remains the same to support the chat
+// --- NEW PROFILE ROUTE ---
+app.get('/profile', (req, res) => {
+  res.sendFile(__dirname + '/profile.html');
+});
+
+// Socket logic
 io.on('connection', (socket) => {
   console.log('A user connected!');
 

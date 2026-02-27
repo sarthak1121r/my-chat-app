@@ -82,10 +82,10 @@
                 <button class="btn-enter">Enter Room →</button>
             </div>
 
-            <div class="card glass">
+            <div class="card glass" onclick="window.location.href='/profile'">
                 <h3>User Profile</h3>
                 <p>Customize your avatar, bio, and account settings.</p>
-                <button class="btn-enter" style="opacity: 0.5; cursor: not-allowed;">Coming Soon</button>
+                <button class="btn-enter">View Profile →</button>
             </div>
 
             <div class="card glass">
@@ -97,10 +97,9 @@
     </div>
 
     <script>
-        // Check if user is actually logged in
         const user = sessionStorage.getItem('username');
         if (!user) {
-            window.location.href = '/'; // Kick back to login if no "wristband"
+            window.location.href = '/'; 
         } else {
             document.getElementById('display-name').textContent = user;
         }
@@ -110,7 +109,7 @@
             window.location.href = '/';
         }
 
-        // --- BACKGROUND PARTICLES (Matching Theme) ---
+        // --- BACKGROUND PARTICLES ---
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];

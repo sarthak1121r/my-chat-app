@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Neon Profile</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            background: #050505; color: white; overflow: hidden;
+        }
+
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .container {
+            display: flex; flex-direction: column; align-items: center; padding-top: 80px;
+        }
+
+        .profile-card {
+            width: 90%; max-width: 500px; padding: 40px; border-radius: 32px; text-align: center;
+        }
+
+        .big-avatar {
+            width: 100px; height: 100px; border-radius: 50%; background: #a855f7;
+            margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;
+            font-size: 40px; font-weight: bold; border: 4px solid rgba(255,255,255,0.1);
+        }
+
+        h2 { margin: 10px 0; font-size: 28px; }
+        .status-badge { color: #10b981; font-size: 14px; margin-bottom: 30px; }
+
+        .info-row {
+            display: flex; justify-content: space-between; padding: 15px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05); text-align: left;
+        }
+
+        .back-btn {
+            margin-top: 30px; background: transparent; border: 1px solid #a855f7;
+            color: #a855f7; padding: 10px 25px; border-radius: 12px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="container">
+        <div class="profile-card glass">
+            <div id="p-avatar" class="big-avatar">U</div>
+            <h2 id="p-username">Username</h2>
+            <div class="status-badge">● Online</div>
+
+            <div class="info-row">
+                <span>Account Status</span>
+                <span style="color: #a855f7;">Verified</span>
+            </div>
+            <div class="info-row">
+                <span>Member Since</span>
+                <span>Feb 2026</span>
+            </div>
+
+            <button class="back-btn" onclick="window.location.href='/dashboard'">← Back to Dashboard</button>
+        </div>
+    </div>
+
+    <script>
+        const user = sessionStorage.getItem('username');
+        if (!user) {
+            window.location.href = '/';
+        } else {
+            document.getElementById('p-username').textContent = user;
+            document.getElementById('p-avatar').textContent = user.charAt(0).toUpperCase();
+        }
+
+        // --- BACKGROUND PARTICLES ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function initParticles() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            particles = [];
+            for(let i=0; i<80; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+                    size: Math.random() * 2 + 0.5, speedX: Math.random() * 0.4 - 0.2,
+                    speedY: Math.random() * 0.4 - 0.2, color: Math.random() > 0.5 ? '#a855f7' : '#ec4899'
+                });
+            }
+        }
+        function animate() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.x += p.speedX; p.y += p.speedY;
+                if(p.x < 0 || p.x > canvas.width) p.speedX *= -1;
+                if(p.y < 0 || p.y > canvas.height) p.speedY *= -1;
+                ctx.fillStyle = p.color; ctx.globalAlpha = 0.2;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+            });
+            requestAnimationFrame(animate);
+        }
+        window.addEventListener('resize', initParticles);
+        initParticles(); animate();
+    </script>
+</body>
+</html>
