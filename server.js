@@ -38,15 +38,15 @@ app.get('/profile', (req, res) => {
   res.sendFile(__dirname + '/profile.html');
 });
 
-// --- NEW GAME ROUTE ---
 app.get('/games/tictactoe', (req, res) => {
   res.sendFile(__dirname + '/tictactoe.html');
 });
 
-// Socket logic
+// --- 4. SOCKET & SIGNALING LOGIC ---
 io.on('connection', (socket) => {
   console.log('A user connected!');
 
+  // Existing Chat & Auth Logic
   socket.on('login', async (data, callback) => {
     try {
       let user = await User.findOne({ username: data.username });
@@ -73,6 +73,27 @@ io.on('connection', (socket) => {
   socket.on('typing', (name) => {
     socket.broadcast.emit('typing', name);
   });
+
+  // ==========================================
+  // --- NEW: WEBRTC SIGNALING EVENTS ---
+  // ==========================================
+
+  // 1. When a caller sends an "Offer" to start a call
+  socket.on('call-offer', (data) => {
+    socket.broadcast.emit('call-offer', data);
+  });
+
+  // 2. When the receiver accepts and sends an "Answer" back
+  socket.on('call-answer', (data) => {
+    socket.broadcast.emit('call-answer', data);
+  });
+
+  // 3. ICE Candidates: These are network coordinates browsers use to find each other
+  socket.on('ice-candidate', (data) => {
+    socket.broadcast.emit('ice-candidate', data);
+  });
+
+  // ==========================================
 
   socket.on('disconnect', () => {
     console.log('A user disconnected');
