@@ -134,10 +134,11 @@
 
     <div id="header">
       <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile">
-      <div>
+      <div style="flex-grow: 1;">
         <h2 id="user-name-display">Chat App</h2>
         <p>Online</p>
       </div>
+      <button id="clear-btn" style="width: auto; height: 35px; border-radius: 10px; padding: 0 15px; font-size: 14px; background: #dc3545; color: white;">Clear</button>
     </div>
 
     <ul id="messages"></ul>
@@ -192,6 +193,11 @@
 
         messages.appendChild(item);
         messages.scrollTop = messages.scrollHeight;
+      });
+
+      // Clear Chat Button Logic
+      document.getElementById('clear-btn').addEventListener('click', function() {
+        messages.innerHTML = ''; 
       });
     </script>
   </body>
