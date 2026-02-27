@@ -76,18 +76,27 @@
             text-transform: uppercase; border: 1px solid rgba(255,255,255,0.2);
         }
 
+        /* Typing Indicator Styling */
+        #typing-indicator {
+            padding: 0 25px 10px;
+            font-size: 12px;
+            color: #a855f7;
+            height: 25px;
+            display: none;
+            align-items: center;
+            gap: 5px;
+        }
+        .dot { width: 4px; height: 4px; background: #a855f7; border-radius: 50%; animation: wave 1.3s infinite; }
+        .dot:nth-child(2) { animation-delay: -1.1s; }
+        .dot:nth-child(3) { animation-delay: -0.9s; }
+        @keyframes wave { 0%, 60%, 100% { transform: translateY(0); opacity: 0.3; } 30% { transform: translateY(-4px); opacity: 1; } }
+
         #form { padding: 25px; display: flex; gap: 12px; background: rgba(0,0,0,0.3); border-top: 1px solid rgba(255,255,255,0.05); }
         #input { flex-grow: 1; background: rgba(255,255,255,0.05); border-radius: 30px; }
 
-        /* Step 2: Blue Tick Animation */
-        @keyframes tickPop {
-            0% { transform: scale(0); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .blue-tick {
-            color: #60a5fa; margin-left: 8px; font-size: 12px;
-            display: inline-block; animation: tickPop 0.3s ease-out;
-        }
+        @keyframes tickPop { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        .blue-tick { color: #60a5fa; margin-left: 5px; font-size: 10px; animation: tickPop 0.3s ease-out; }
+        .time { font-size: 10px; opacity: 0.4; margin-left: 8px; }
 
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
     </style>
@@ -110,6 +119,12 @@
             <button id="clear-btn" style="width: auto; padding: 8px 18px; font-size: 12px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.5);">Clear</button>
         </div>
         <ul id="messages"></ul>
+        
+        <div id="typing-indicator">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span id="typing-text" style="margin-left: 5px;"></span>
+        </div>
+
         <form id="form" class="glass">
             <input id="input" autocomplete="off" placeholder="Type a message...">
             <button style="width: 55px; border-radius: 50%;">➤</button>
@@ -118,7 +133,6 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        // --- STEP 3: PARTICLE BACKGROUND LOGIC ---
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
         let particles = [];
@@ -147,18 +161,16 @@
                 if(p.y < 0 || p.y > canvas.height) p.speedY *= -1;
                 ctx.fillStyle = p.color;
                 ctx.globalAlpha = 0.3;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
             });
             requestAnimationFrame(animate);
         }
         window.addEventListener('resize', initParticles);
         initParticles(); animate();
 
-        // --- CHAT LOGIC ---
         const socket = io();
         let myName = "";
+        let typingTimer;
 
         function getAvatar(name) {
             const colors = ['#a855f7', '#ec4899', '#3b82f6', '#10b981'];
@@ -181,35 +193,48 @@
             }
         });
 
-        // --- CLEAR BUTTON FIX ---
         document.getElementById('clear-btn').addEventListener('click', () => {
             document.getElementById('messages').innerHTML = '';
         });
 
+        // Typing Logic
+        const inputField = document.getElementById('input');
+        inputField.addEventListener('input', () => {
+            socket.emit('typing', myName);
+        });
+
+        socket.on('typing', (name) => {
+            const indicator = document.getElementById('typing-indicator');
+            document.getElementById('typing-text').textContent = `${name} is typing`;
+            indicator.style.display = 'flex';
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => { indicator.style.display = 'none'; }, 2000);
+        });
+
         document.getElementById('form').addEventListener('submit', (e) => {
             e.preventDefault();
-            const val = document.getElementById('input').value;
-            if(val) {
-                socket.emit('chat message', { user: myName, text: val });
-                document.getElementById('input').value = '';
+            if(inputField.value) {
+                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                socket.emit('chat message', { user: myName, text: inputField.value, time: time });
+                inputField.value = '';
             }
         });
 
         socket.on('chat message', (msg) => {
+            document.getElementById('typing-indicator').style.display = 'none';
             const li = document.createElement('li');
             const isMe = msg.user === myName;
             li.className = isMe ? 'my-message' : 'other-message';
             
-            // Added Blue Ticks for Step 2
             li.innerHTML = `
                 ${getAvatar(msg.user)}
                 <div>
                     <div style="font-size: 10px; opacity: 0.5; margin-bottom: 2px;">${msg.user}</div>
                     ${msg.text}
+                    <span class="time">${msg.time}</span>
                     ${isMe ? '<span class="blue-tick">✔✔</span>' : ''}
                 </div>
             `;
-            
             document.getElementById('messages').appendChild(li);
             document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
         });
