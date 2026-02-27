@@ -11,11 +11,21 @@
         padding: 0; 
         background-color: #0f172a; 
         color: #f8fafc;
-        /* THE MOBILE FIX: 100dvh prevents the keyboard/address bar from hiding the input */
         height: 100dvh; 
         overflow: hidden; 
         display: flex;
         flex-direction: column;
+      }
+
+      /* --- ANIMATIONS --- */
+      @keyframes popIn {
+        0% { opacity: 0; transform: translateY(20px) scale(0.95); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
 
       /* --- LOGIN SCREEN STYLES --- */
@@ -26,6 +36,7 @@
         align-items: center;
         height: 100%;
         background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        transition: opacity 0.5s ease;
       }
       .login-box {
         background: #1e293b;
@@ -35,6 +46,7 @@
         text-align: center;
         width: 90%;
         max-width: 400px;
+        animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
       .login-box h1 { margin-top: 0; color: #a855f7; }
       .login-box input {
@@ -46,7 +58,9 @@
         background: #0f172a;
         color: white;
         font-size: 16px;
+        transition: border 0.3s;
       }
+      .login-box input:focus { border-color: #a855f7; outline: none; }
       .login-box button {
         width: 100%;
         padding: 12px;
@@ -60,7 +74,7 @@
         cursor: pointer;
         transition: 0.3s;
       }
-      .login-box button:hover { background: #9333ea; }
+      .login-box button:hover { background: #9333ea; transform: translateY(-2px); }
       #login-error { color: #ef4444; font-size: 14px; margin-top: 10px; display: none; }
 
       /* --- CHAT SCREEN STYLES --- */
@@ -91,6 +105,7 @@
         overflow-y: auto; 
         display: flex; 
         flex-direction: column; 
+        scroll-behavior: smooth;
       }
       
       #messages li { 
@@ -104,6 +119,8 @@
         position: relative;
         display: flex;
         flex-direction: column;
+        /* Trigger the bounce animation on every new message */
+        animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
 
       .my-message {
@@ -128,13 +145,14 @@
         font-weight: bold;
       }
 
-      /* Sent Image Styling */
       .chat-image {
         max-width: 100%;
         border-radius: 8px;
         margin-bottom: 5px;
         cursor: pointer;
+        transition: transform 0.2s;
       }
+      .chat-image:active { transform: scale(0.98); }
 
       .msg-footer {
         display: flex;
@@ -152,10 +170,9 @@
         padding: 10px 15px; 
         background: #1e293b; 
         align-items: center;
-        padding-bottom: env(safe-area-inset-bottom, 15px); /* iPhone notch fix */
+        padding-bottom: env(safe-area-inset-bottom, 15px); 
       }
 
-      /* Image Upload Button */
       #img-btn {
         background: transparent;
         border: none;
@@ -164,7 +181,9 @@
         margin-right: 10px;
         color: #a855f7;
         padding: 0 5px;
+        transition: transform 0.2s;
       }
+      #img-btn:active { transform: scale(0.8); }
 
       #input { 
         flex-grow: 1; 
@@ -176,7 +195,9 @@
         outline: none; 
         background-color: #334155;
         color: white;
+        transition: background-color 0.3s;
       }
+      #input:focus { background-color: #475569; }
       #input::placeholder { color: #94a3b8; }
       
       .send-btn { 
@@ -193,10 +214,12 @@
         font-size: 18px;
         transition: 0.2s; 
       }
-      .send-btn:hover { background: #9333ea; transform: scale(1.05); }
+      .send-btn:active { background: #9333ea; transform: scale(0.9); }
     </style>
   </head>
   <body>
+
+    <audio id="notify-sound" src="https://actions.google.com/sounds/v1/water_exploration/water_drop.ogg" preload="auto"></audio>
 
     <div id="login-screen">
       <div class="login-box">
@@ -215,7 +238,7 @@
           <h2 id="user-name-display">Neon Chat Room</h2>
           <p>🟢 Secure Connection</p>
         </div>
-        <button id="clear-btn" style="width: auto; height: 35px; border-radius: 8px; padding: 0 15px; font-size: 14px; background: #ef4444; color: white; border: none; cursor: pointer;">Clear</button>
+        <button id="clear-btn" style="width: auto; height: 35px; border-radius: 8px; padding: 0 15px; font-size: 14px; background: #ef4444; color: white; border: none; cursor: pointer; transition: 0.2s;">Clear</button>
       </div>
 
       <ul id="messages"></ul>
@@ -224,8 +247,7 @@
 
       <form id="form" action="">
         <input type="file" id="image-input" accept="image/*" style="display: none;">
-        
-        <button type="button" id="img-btn">📷</button>
+        <button type="button" id="img-btn" title="Send Image">📷</button>
         <input id="input" autocomplete="off" placeholder="Message..." />
         <button class="send-btn">➤</button>
       </form>
@@ -235,8 +257,9 @@
     <script>
       const socket = io();
       let myName = "";
+      const notifySound = document.getElementById('notify-sound');
 
-      // Login Logic
+      // Login Logic with Fade Animation
       document.getElementById('join-btn').addEventListener('click', function() {
         const nameInput = document.getElementById('username').value.trim();
         const passInput = document.getElementById('password').value;
@@ -244,8 +267,17 @@
         if (nameInput.length > 0 && passInput === "1234") {
           myName = nameInput;
           document.getElementById('user-name-display').textContent = "Logged in as: " + myName;
-          document.getElementById('login-screen').style.display = "none";
-          document.getElementById('chat-screen').style.display = "flex";
+          
+          // Fade out login, fade in chat
+          const loginScreen = document.getElementById('login-screen');
+          loginScreen.style.opacity = '0';
+          setTimeout(() => {
+            loginScreen.style.display = "none";
+            const chatScreen = document.getElementById('chat-screen');
+            chatScreen.style.display = "flex";
+            chatScreen.style.animation = "fadeIn 0.5s ease-in forwards";
+          }, 500);
+
         } else {
           document.getElementById('login-error').style.display = "block";
         }
@@ -258,27 +290,21 @@
       const imgBtn = document.getElementById('img-btn');
       const imageInput = document.getElementById('image-input');
 
-      // --- NEW IMAGE UPLOAD LOGIC ---
-      imgBtn.addEventListener('click', () => {
-        imageInput.click(); // Opens the phone gallery/file explorer
-      });
+      imgBtn.addEventListener('click', () => imageInput.click());
 
       imageInput.addEventListener('change', function() {
         const file = this.files[0];
         if (file) {
           const reader = new FileReader();
           reader.onload = function(e) {
-            const base64Image = e.target.result;
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            // Send the image to the server
-            socket.emit('chat message', { user: myName, img: base64Image, time: time });
+            socket.emit('chat message', { user: myName, img: e.target.result, time: time });
           };
-          reader.readAsDataURL(file); // Convert image to text data
-          this.value = ''; // Reset the input
+          reader.readAsDataURL(file); 
+          this.value = ''; 
         }
       });
 
-      // --- TEXT MESSAGE LOGIC ---
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         if (input.value && myName !== "") {
@@ -289,18 +315,14 @@
         }
       });
 
-      // --- RECEIVING MESSAGES (Text OR Images) ---
+      // Receiving Messages
       socket.on('chat message', function(msg) {
         const item = document.createElement('li');
         const timeStamp = msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-        // Check if message is an image or text
         let contentHtml = '';
-        if (msg.img) {
-          contentHtml = `<img src="${msg.img}" class="chat-image" alt="Sent Image">`;
-        } else if (msg.text) {
-          contentHtml = `<span>${msg.text}</span>`;
-        }
+        if (msg.img) contentHtml = `<img src="${msg.img}" class="chat-image" alt="Sent Image">`;
+        else if (msg.text) contentHtml = `<span>${msg.text}</span>`;
 
         if (msg.user === myName) {
           item.classList.add('my-message');
@@ -315,14 +337,16 @@
             ${contentHtml}
             <div class="msg-footer">${timeStamp}</div>
           `;
+          
+          // PLAY SOUND FOR INCOMING MESSAGES
+          notifySound.play().catch(e => console.log("Sound blocked by browser until user interacts"));
         }
+        
         messages.appendChild(item);
         messages.scrollTop = messages.scrollHeight;
       });
 
-      document.getElementById('clear-btn').addEventListener('click', function() {
-        messages.innerHTML = ''; 
-      });
+      document.getElementById('clear-btn').addEventListener('click', () => messages.innerHTML = '');
 
       // Typing Indicator
       const typingIndicator = document.getElementById('typing-indicator');
