@@ -9,13 +9,11 @@
         font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
         margin: 0; 
         padding: 0; 
-        /* The base WhatsApp beige color */
         background-color: #e5ddd5; 
-        /* The subtle professional chat doodle pattern */
         background-image: url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png");
         background-repeat: repeat;
         background-attachment: fixed;
-        background-blend-mode: overlay; /* Blends the pattern perfectly with the beige */
+        background-blend-mode: overlay; 
         height: 100vh; 
         display: flex;
         flex-direction: column;
@@ -51,13 +49,16 @@
       }
       
       #messages li { 
-        padding: 8px 12px; 
-        margin-bottom: 10px; 
+        padding: 6px 10px 8px 12px; 
+        margin-bottom: 5px; 
         border-radius: 8px; 
         max-width: 75%; 
         word-wrap: break-word; 
         box-shadow: 0 1px 1px rgba(0,0,0,0.1); 
         font-size: 15px; 
+        position: relative;
+        display: flex;
+        flex-direction: column;
       }
 
       .my-message {
@@ -76,8 +77,24 @@
         font-size: 12px; 
         color: #029d00; 
         display: block; 
-        margin-bottom: 3px; 
+        margin-bottom: 2px; 
         font-weight: bold;
+      }
+
+      /* Timestamp styling */
+      .msg-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-top: 2px;
+        font-size: 10px;
+        color: #667781;
+      }
+
+      .tick {
+        margin-left: 4px;
+        font-size: 12px;
+        color: #53bdeb; /* WhatsApp blue tick color */
       }
 
       #form { 
@@ -118,7 +135,7 @@
     <div id="header">
       <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile">
       <div>
-        <h2 id="user-name-display">Global Chat Room</h2>
+        <h2 id="user-name-display">Chat App</h2>
         <p>Online</p>
       </div>
     </div>
@@ -138,26 +155,39 @@
       const messages = document.getElementById('messages');
 
       const myName = prompt("Welcome! What is your name?") || "Anonymous";
-      
-      document.getElementById('user-name-display').textContent = myName;
+      document.getElementById('user-name-display').textContent = "Logged in as: " + myName;
 
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         if (input.value) {
-          socket.emit('chat message', { user: myName, text: input.value });
+          // Send time along with the message
+          const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          socket.emit('chat message', { user: myName, text: input.value, time: time });
           input.value = '';
         }
       });
 
       socket.on('chat message', function(msg) {
         const item = document.createElement('li');
+        
+        // Use the time from the message object, or get current time if missing
+        const timeStamp = msg.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
         if (msg.user === myName) {
           item.classList.add('my-message');
-          item.textContent = msg.text; 
+          item.innerHTML = `
+            <span>${msg.text}</span>
+            <div class="msg-footer">
+              ${timeStamp} <span class="tick">✔✔</span>
+            </div>
+          `; 
         } else {
           item.classList.add('other-message');
-          item.innerHTML = `<span class="sender-name">${msg.user}</span>${msg.text}`;
+          item.innerHTML = `
+            <span class="sender-name">${msg.user}</span>
+            <span>${msg.text}</span>
+            <div class="msg-footer">${timeStamp}</div>
+          `;
         }
 
         messages.appendChild(item);
